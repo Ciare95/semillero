@@ -16,3 +16,5 @@ urlpatterns = [
     path('reporte_clientes', view_reportes.reporteClientes, name='reporte_clientes'),
     path('ingresos_gastos', view_reportes.ingresosGastos, name='ingresos_gastos'),
 ]
+
+# Prueba de linea para jenkins
