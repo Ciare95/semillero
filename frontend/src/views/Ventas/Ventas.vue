@@ -18,17 +18,6 @@
     <div class="border-b border-slate-200 mt-4 mb-6 pt-3 pb-3">
       <nav class="flex flex-wrap gap-x-10 gap-y-2">
         <button
-          @click="activeTab = 'ventas'"
-          :class="[
-            'whitespace-nowrap border-b-2 px-3 pt-2 pb-3 text-sm font-medium transition-colors',
-            activeTab === 'ventas'
-              ? 'border-sky-500 text-sky-600'
-              : 'border-transparent text-slate-500 hover:border-slate-300 hover:text-slate-700'
-          ]"
-        >
-          Listar Ventas
-        </button>
-        <button
           @click="activeTab = 'crear'"
           :class="[
             'whitespace-nowrap border-b-2 px-3 pt-2 pb-3 text-sm font-medium transition-colors',
@@ -38,6 +27,17 @@
           ]"
         >
           Crear Venta
+        </button>
+        <button
+          @click="activeTab = 'ventas'"
+          :class="[
+            'whitespace-nowrap border-b-2 px-3 pt-2 pb-3 text-sm font-medium transition-colors',
+            activeTab === 'ventas'
+              ? 'border-sky-500 text-sky-600'
+              : 'border-transparent text-slate-500 hover:border-slate-300 hover:text-slate-700'
+          ]"
+        >
+          Listar Ventas
         </button>
       </nav>
     </div>
@@ -161,7 +161,7 @@ export default {
   data() {
     return {
       ventas: [],
-      activeTab: 'ventas'
+      activeTab: 'crear'
     }
   },
   mounted() {
