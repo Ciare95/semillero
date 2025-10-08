@@ -1,8 +1,9 @@
 from django.db import transaction
 from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import IsAuthenticatedOrReadOnly
+from rest_framework.permissions import IsAuthenticatedOrReadOnly, AllowAny
 from rest_framework.response import Response
 from rest_framework import status
+from django.views.decorators.csrf import csrf_exempt
 from .models import Venta
 from .serializers import VentaCrearSerializer, VentaDetalleSerializer
 
@@ -59,7 +60,8 @@ def obtener_venta(request, id):
     return Response(VentaDetalleSerializer(venta).data)
 
 @api_view(['GET', 'POST'])
-@permission_classes([IsAuthenticatedOrReadOnly])
+@permission_classes([AllowAny])
+@csrf_exempt
 def crearVenta(request):
     
     serializer = VentaCrearSerializer(data=request.data, context={'request':request})
