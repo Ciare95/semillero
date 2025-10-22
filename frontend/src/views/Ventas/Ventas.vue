@@ -42,6 +42,90 @@
         </button>
       </div>
 
+      <!-- Filtros de Fecha -->
+      <div class="card">
+        <h3 class="text-lg font-semibold text-slate-900 mb-4">Filtrar por Fecha</h3>
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <!-- Filtro por Día -->
+          <div>
+            <label class="block text-sm font-medium text-slate-700 mb-1">Día</label>
+            <div class="relative" @click="$refs.dateInput.focus()">
+              <input
+                ref="dateInput"
+                type="date"
+                v-model="filtroDia"
+                @change="aplicarFiltroDia"
+                class="w-full px-3 py-2 pr-10 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-colors cursor-pointer bg-white"
+                :title="filtroDia ? `Fecha seleccionada: ${formatearFechaParaMostrar(filtroDia)}` : 'Seleccionar fecha'"
+                onkeydown="return false"
+                onpaste="return false"
+                oncut="return false"
+              />
+              <svg class="absolute right-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+              </svg>
+            </div>
+            <p v-if="filtroDia" class="text-xs text-slate-500 mt-1">
+              {{ formatearFechaParaMostrar(filtroDia) }}
+            </p>
+          </div>
+          
+          <!-- Filtro por Mes -->
+          <div>
+            <label class="block text-sm font-medium text-slate-700 mb-1">Mes</label>
+            <select
+              v-model="filtroMes"
+              @change="aplicarFiltroMes"
+              class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-colors"
+            >
+              <option value="">Seleccionar mes</option>
+              <option v-for="mes in meses" :key="mes.value" :value="`${new Date().getFullYear()}-${mes.value}`">
+                {{ mes.label }} {{ new Date().getFullYear() }}
+              </option>
+            </select>
+            <p v-if="filtroMes" class="text-xs text-slate-500 mt-1">
+              {{ formatearMesParaMostrar(filtroMes) }}
+            </p>
+          </div>
+          
+          <!-- Filtro por Año -->
+          <div>
+            <label class="block text-sm font-medium text-slate-700 mb-1">Año</label>
+            <select
+              v-model="filtroAnio"
+              @change="aplicarFiltroAnio"
+              class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-colors"
+            >
+              <option value="">Seleccionar año</option>
+              <option v-for="anio in añosDisponibles" :key="anio" :value="anio">{{ anio }}</option>
+            </select>
+          </div>
+          
+          <!-- Botones de Acción -->
+          <div class="flex items-end gap-2">
+            <button
+              @click="limpiarFiltros"
+              class="btn btn-ghost flex-1"
+            >
+              Limpiar
+            </button>
+            <button
+              @click="filtrarHoy"
+              class="btn btn-primary"
+            >
+              Hoy
+            </button>
+          </div>
+        </div>
+        
+        <!-- Estado del filtro actual -->
+        <div v-if="filtroActual" class="mt-3 p-3 bg-slate-50 rounded-lg">
+          <p class="text-sm text-slate-600">
+            <strong>Filtro actual:</strong> {{ filtroActual }}
+          </p>
+        </div>
+      </div>
+
       <!-- Sales Table -->
       <div class="card overflow-hidden">
         <div class="overflow-x-auto">
@@ -357,6 +441,28 @@ export default {
       // Productos en venta
       productosVenta: [],
 
+      // Filtros de fecha
+      filtroDia: '',
+      filtroMes: '',
+      filtroAnio: '',
+      filtroActual: '',
+
+      // Meses para el select
+      meses: [
+        { value: '01', label: 'Enero' },
+        { value: '02', label: 'Febrero' },
+        { value: '03', label: 'Marzo' },
+        { value: '04', label: 'Abril' },
+        { value: '05', label: 'Mayo' },
+        { value: '06', label: 'Junio' },
+        { value: '07', label: 'Julio' },
+        { value: '08', label: 'Agosto' },
+        { value: '09', label: 'Septiembre' },
+        { value: '10', label: 'Octubre' },
+        { value: '11', label: 'Noviembre' },
+        { value: '12', label: 'Diciembre' }
+      ],
+
       // UI
       loadingCreate: false,
     }
@@ -391,10 +497,19 @@ export default {
       })
       
       return Number(totalGeneral.toFixed(2))
+    },
+    añosDisponibles() {
+      const añoActual = new Date().getFullYear()
+      const años = []
+      for (let i = añoActual; i >= 2020; i--) {
+        años.push(i)
+      }
+      return años
     }
   },
   mounted() {
-    this.listarVentas()
+    // Por defecto mostrar ventas del día actual
+    this.filtrarHoy()
     this.cargarProductos()
     this.cargarClientes()
   },
@@ -410,6 +525,30 @@ export default {
         return d.toLocaleString('es-CO')
       } catch {
         return val
+      }
+    },
+    formatearFechaParaMostrar(fecha) {
+      try {
+        const d = new Date(fecha)
+        return d.toLocaleDateString('es-CO', { 
+          year: 'numeric', 
+          month: 'long', 
+          day: 'numeric' 
+        })
+      } catch {
+        return fecha
+      }
+    },
+    formatearMesParaMostrar(mes) {
+      try {
+        const [anio, mesNum] = mes.split('-')
+        const fecha = new Date(parseInt(anio), parseInt(mesNum) - 1, 1)
+        return fecha.toLocaleDateString('es-CO', { 
+          year: 'numeric', 
+          month: 'long'
+        })
+      } catch {
+        return mes
       }
     },
 
@@ -432,9 +571,22 @@ export default {
     },
 
     // Listado/acciones ventas
-    async listarVentas() {
+    async listarVentas(filtros = {}) {
       try {
-        const response = await api.get('listar_ventas/')
+        const params = new URLSearchParams()
+        
+        // Agregar filtros a los parámetros de consulta
+        if (filtros.fecha_desde) {
+          params.append('fecha_desde', filtros.fecha_desde)
+        }
+        if (filtros.fecha_hasta) {
+          params.append('fecha_hasta', filtros.fecha_hasta)
+        }
+        
+        const queryString = params.toString()
+        const url = queryString ? `listar_ventas/?${queryString}` : 'listar_ventas/'
+        
+        const response = await api.get(url)
         this.ventas = response.data
       } catch (error) {
         console.error('Error listando ventas:', error)
@@ -584,6 +736,91 @@ export default {
     // Placeholder transacción
     onTransaccion() {
       alert('Funcionalidad de Transacción pendiente de definición.')
+    },
+
+    // Métodos de filtros de fecha independientes
+    aplicarFiltroDia() {
+      if (this.filtroDia) {
+        // Limpiar otros filtros
+        this.filtroMes = ''
+        this.filtroAnio = ''
+        
+        // Aplicar filtro por día
+        this.listarVentas({
+          fecha_desde: this.filtroDia,
+          fecha_hasta: this.filtroDia
+        })
+        this.filtroActual = `Día: ${this.filtroDia}`
+      } else {
+        this.listarVentas()
+        this.filtroActual = 'Todas las ventas'
+      }
+    },
+
+    aplicarFiltroMes() {
+      if (this.filtroMes) {
+        // Limpiar otros filtros
+        this.filtroDia = ''
+        this.filtroAnio = ''
+        
+        // Calcular rango del mes
+        const [anio, mes] = this.filtroMes.split('-')
+        const primerDia = `${anio}-${mes}-01`
+        const ultimoDia = new Date(parseInt(anio), parseInt(mes), 0).toISOString().split('T')[0]
+        
+        // Aplicar filtro por mes
+        this.listarVentas({
+          fecha_desde: primerDia,
+          fecha_hasta: ultimoDia
+        })
+        this.filtroActual = `Mes: ${mes}/${anio}`
+      } else {
+        this.listarVentas()
+        this.filtroActual = 'Todas las ventas'
+      }
+    },
+
+    aplicarFiltroAnio() {
+      if (this.filtroAnio) {
+        // Limpiar otros filtros
+        this.filtroDia = ''
+        this.filtroMes = ''
+        
+        // Aplicar filtro por año
+        this.listarVentas({
+          fecha_desde: `${this.filtroAnio}-01-01`,
+          fecha_hasta: `${this.filtroAnio}-12-31`
+        })
+        this.filtroActual = `Año: ${this.filtroAnio}`
+      } else {
+        this.listarVentas()
+        this.filtroActual = 'Todas las ventas'
+      }
+    },
+
+    limpiarFiltros() {
+      this.filtroDia = ''
+      this.filtroMes = ''
+      this.filtroAnio = ''
+      this.listarVentas()
+      this.filtroActual = 'Todas las ventas'
+    },
+
+    filtrarHoy() {
+      // Obtener fecha actual en formato YYYY-MM-DD
+      const hoy = new Date().toISOString().split('T')[0]
+      
+      // Limpiar otros filtros
+      this.filtroDia = hoy
+      this.filtroMes = ''
+      this.filtroAnio = ''
+      
+      // Aplicar filtro del día actual
+      this.listarVentas({
+        fecha_desde: hoy,
+        fecha_hasta: hoy
+      })
+      this.filtroActual = `Hoy: ${hoy}`
     }
   }
 }
