@@ -406,29 +406,24 @@
               ></textarea>
             </div>
 
-            <!-- Fila 5: PRECIO TOTAL | Botón Transacción -->
-            <div class="flex items-end">
-              <div class="w-full">
-                <label class="block text-sm font-medium text-slate-700 mb-1">PRECIO TOTAL</label>
-                <div class="px-3 py-2 border border-slate-300 rounded-lg bg-slate-50 text-lg font-semibold">
-                  {{ formatMoney(totalCalculado) }}
-                </div>
+            <!-- Fila 5: PRECIO TOTAL (ocupa todo el ancho) -->
+            <div class="md:col-span-2">
+              <label class="block text-sm font-medium text-slate-700 mb-1">PRECIO TOTAL</label>
+              <div class="px-3 py-2 border-2 border-green-500 rounded-lg bg-slate-50 text-lg font-semibold text-center">
+                {{ formatMoney(totalCalculado) }}
               </div>
-            </div>
-            <div class="flex items-end">
-              <button type="button" class="btn btn-ghost w-full" @click="onTransaccion">
-                Transacción
-              </button>
             </div>
 
-            <!-- Fila 6: PRECIO TOTAL | Botón Guardar venta -->
+            <!-- Fila 6: Botones Transacción y Guardar Venta -->
             <div class="flex items-end">
-              <div class="w-full">
-                <label class="block text-sm font-medium text-slate-700 mb-1">PRECIO TOTAL</label>
-                <div class="px-3 py-2 border border-slate-300 rounded-lg bg-slate-50 text-lg font-semibold">
-                  {{ formatMoney(totalCalculado) }}
-                </div>
-              </div>
+              <button 
+                type="button" 
+                class="btn w-full"
+                @click="onTransaccion"
+                style="background-color: #b8860b; color: white; border-color: #b8860b;"
+              >
+                Transacción
+              </button>
             </div>
             <div class="flex items-end">
               <button

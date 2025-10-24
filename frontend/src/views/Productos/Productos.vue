@@ -108,10 +108,10 @@
               <tr v-for="producto in productos" :key="producto.id" class="hover:bg-slate-50 transition-colors">
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-900">{{ producto.id }}</td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-slate-900">{{ producto.nombre }}</td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-900">${{ producto.precio }}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-900">{{ formatMoney(producto.precio_venta) }}</td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-900">{{ producto.iva }}%</td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-900">{{ producto.categoria }}</td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-900">{{ producto.marca }}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-900">{{ producto.categoria_detalle?.nombre || producto.categoria }}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-900">{{ producto.marca_detalle?.nombre || producto.marca }}</td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                   <div class="flex items-center gap-2">
                     <button 
@@ -281,7 +281,7 @@
               <tr v-for="especial in productosEspeciales" :key="especial.id" class="hover:bg-slate-50 transition-colors">
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-900">{{ especial.id }}</td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-slate-900">{{ especial.nombre }}</td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-900">${{ especial.precio }}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-900">{{ formatMoney(especial.precio_total) }}</td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                   <div class="flex items-center gap-2">
                     <button 
@@ -328,7 +328,6 @@
               <tr>
                 <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">ID</th>
                 <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Nombre</th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Precio</th>
                 <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Acciones</th>
               </tr>
             </thead>
@@ -336,7 +335,6 @@
               <tr v-for="servicio in productosServicio" :key="servicio.id" class="hover:bg-slate-50 transition-colors">
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-900">{{ servicio.id }}</td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-slate-900">{{ servicio.nombre }}</td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-900">${{ servicio.precio }}</td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                   <div class="flex items-center gap-2">
                     <button 
@@ -367,10 +365,10 @@
         <div class="p-6 border-b border-slate-200">
           <h3 class="text-lg font-semibold text-slate-900">
             {{ showForm === 'productos' ? (editing ? 'Editar Producto' : 'Agregar Producto') : 
-               showForm === 'categorias' ? (editing ? 'Editar Categoría' : 'Agregar Categoría') : 
-               showForm === 'marcas' ? (editing ? 'Editar Marca' : 'Agregar Marca') : 
-               showForm === 'especiales' ? (editing ? 'Editar Producto Especial' : 'Agregar Producto Especial') : 
-               (editing ? 'Editar Producto Servicio' : 'Agregar Producto Servicio') }}
+              showForm === 'categorias' ? (editing ? 'Editar Categoría' : 'Agregar Categoría') : 
+              showForm === 'marcas' ? (editing ? 'Editar Marca' : 'Agregar Marca') : 
+              showForm === 'especiales' ? (editing ? 'Editar Producto Especial' : 'Agregar Producto Especial') : 
+              (editing ? 'Editar Producto Servicio' : 'Agregar Producto Servicio') }}
           </h3>
         </div>
         <form @submit.prevent="submitForm" class="p-6 space-y-4">
@@ -385,9 +383,9 @@
           </div>
           
           <div v-if="showForm === 'productos'">
-            <label class="block text-sm font-medium text-slate-700 mb-1">Precio</label>
+            <label class="block text-sm font-medium text-slate-700 mb-1">Precio Venta</label>
             <input 
-              v-model="formData.precio" 
+              v-model="formData.precio_venta" 
               placeholder="0.00" 
               type="number" 
               step="0.01" 
@@ -430,10 +428,10 @@
             </select>
           </div>
           
-          <div v-if="showForm !== 'productos'">
-            <label class="block text-sm font-medium text-slate-700 mb-1">Precio</label>
+          <div v-if="showForm === 'especiales'">
+            <label class="block text-sm font-medium text-slate-700 mb-1">Precio Total</label>
             <input 
-              v-model="formData.precio" 
+              v-model="formData.precio_total" 
               placeholder="0.00" 
               type="number" 
               step="0.01" 
@@ -479,7 +477,8 @@ export default {
       showForm: null,
       formData: {
         nombre: '',
-        precio: '',
+        precio_venta: '',
+        precio_total: '',
         iva: '',
         categoria: '',
         marca: ''
@@ -593,7 +592,7 @@ export default {
           }
         }
         this.showForm = null
-        this.formData = { nombre: '', precio: '', iva: '', categoria: '', marca: '' }
+        this.formData = { nombre: '', precio_venta: '', precio_total: '', iva: '', categoria: '', marca: '' }
         this.editing = null
         this.loadData()
       } catch (error) {
@@ -657,6 +656,10 @@ export default {
       } catch (error) {
         console.error('Error calculando precio:', error)
       }
+    },
+    formatMoney(val) {
+      const n = Number(val || 0)
+      return n.toLocaleString('es-CO', { style: 'currency', currency: 'COP', minimumFractionDigits: 2 })
     }
   }
 }
