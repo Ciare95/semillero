@@ -151,6 +151,8 @@
               <tr>
                 <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">ID</th>
                 <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Fecha</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Vendedor</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Cliente</th>
                 <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Total</th>
                 <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Acciones</th>
               </tr>
@@ -160,6 +162,12 @@
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-900">{{ venta.id }}</td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-900">
                   {{ formatFecha(venta.fecha_hora) }}
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-900">
+                  {{ obtenerNombreUsuario(venta.vendedor) }}
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-900">
+                  {{ obtenerNombreCliente(venta.cliente) }}
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-900">{{ formatMoney(venta.total) }}</td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
@@ -181,7 +189,7 @@
                 </td>
               </tr>
               <tr v-if="ventas.length === 0">
-                <td colspan="4" class="px-6 py-6 text-center text-slate-500">Sin ventas registradas</td>
+                <td colspan="6" class="px-6 py-6 text-center text-slate-500">Sin ventas registradas</td>
               </tr>
             </tbody>
           </table>
@@ -448,9 +456,10 @@ export default {
       ventas: [],
       activeTab: 'crear',
 
-      // Productos y clientes
+      // Productos, clientes y usuarios
       productos: [],
       clientes: [],
+      usuarios: [],
 
       // Formulario
       productQuery: '',
@@ -551,6 +560,7 @@ export default {
     this.filtrarHoy()
     this.cargarProductos()
     this.cargarClientes()
+    this.cargarUsuarios()
   },
   watch: {
     // Watcher para el estado de venta
@@ -615,6 +625,15 @@ export default {
         this.clientes = Array.isArray(data) ? data : []
       } catch (error) {
         console.error('Error cargando clientes:', error)
+      }
+    },
+
+    async cargarUsuarios() {
+      try {
+        const { data } = await api.get('usuarios')
+        this.usuarios = Array.isArray(data) ? data : []
+      } catch (error) {
+        console.error('Error cargando usuarios:', error)
       }
     },
 
@@ -869,6 +888,79 @@ export default {
         fecha_hasta: hoy
       })
       this.filtroActual = `Hoy: ${hoy}`
+    },
+
+    // Métodos para obtener nombres de usuario y cliente
+    obtenerNombreUsuario(usuario) {
+      if (!usuario) return 'Sin vendedor'
+      
+      // El usuario puede ser un objeto o un ID
+      if (typeof usuario === 'object') {
+        // Intentar obtener el nombre completo
+        if (usuario.first_name && usuario.last_name) {
+          return `${usuario.first_name} ${usuario.last_name}`
+        }
+        if (usuario.first_name) {
+          return usuario.first_name
+        }
+        if (usuario.username) {
+          return usuario.username
+        }
+        if (usuario.email) {
+          return usuario.email
+        }
+        return 'Usuario desconocido'
+      }
+      
+      // Si es un ID, buscar en la lista de usuarios cargados
+      const usuarioEncontrado = this.usuarios.find(u => u.id === usuario)
+      if (usuarioEncontrado) {
+        if (usuarioEncontrado.first_name && usuarioEncontrado.last_name) {
+          return `${usuarioEncontrado.first_name} ${usuarioEncontrado.last_name}`
+        }
+        if (usuarioEncontrado.first_name) {
+          return usuarioEncontrado.first_name
+        }
+        if (usuarioEncontrado.username) {
+          return usuarioEncontrado.username
+        }
+        if (usuarioEncontrado.email) {
+          return usuarioEncontrado.email
+        }
+        return `Usuario #${usuarioEncontrado.id}`
+      }
+      
+      return `Usuario #${usuario}`
+    },
+
+    obtenerNombreCliente(cliente) {
+      if (!cliente) return 'Sin cliente'
+      
+      // El cliente puede ser un objeto o un ID
+      if (typeof cliente === 'object') {
+        // Intentar obtener el nombre completo
+        if (cliente.nombre) {
+          return cliente.nombre
+        }
+        if (cliente.first_name && cliente.last_name) {
+          return `${cliente.first_name} ${cliente.last_name}`
+        }
+        if (cliente.first_name) {
+          return cliente.first_name
+        }
+        if (cliente.email) {
+          return cliente.email
+        }
+        return `Cliente #${cliente.id}`
+      }
+      
+      // Si es un ID, buscar en la lista de clientes cargados
+      const clienteEncontrado = this.clientes.find(c => c.id === cliente)
+      if (clienteEncontrado) {
+        return clienteEncontrado.nombre || clienteEncontrado.first_name || `Cliente #${clienteEncontrado.id}`
+      }
+      
+      return `Cliente #${cliente}`
     }
   }
 }
