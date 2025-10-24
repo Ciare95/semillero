@@ -126,6 +126,23 @@
         </div>
       </div>
 
+      <!-- Resumen de Ventas Filtradas -->
+      <div class="card bg-sky-50 border-sky-200">
+        <div class="flex items-center justify-between">
+          <div>
+            <h3 class="text-lg font-semibold text-slate-900">Resumen de Ventas</h3>
+            <p class="text-sm text-slate-600 mt-1">
+              {{ filtroActual || 'Todas las ventas' }}
+            </p>
+          </div>
+          <div class="text-right">
+            <p class="text-sm text-slate-600">Total de ventas</p>
+            <p class="text-2xl font-bold text-sky-700">{{ formatMoney(totalVentasFiltradas) }}</p>
+            <p class="text-xs text-slate-500 mt-1">{{ ventas.length }} venta{{ ventas.length !== 1 ? 's' : '' }}</p>
+          </div>
+        </div>
+      </div>
+
       <!-- Sales Table -->
       <div class="card overflow-hidden">
         <div class="overflow-x-auto">
@@ -474,7 +491,7 @@ export default {
       loadingCreate: false,
     }
   },
-  computed: {
+    computed: {
     showSuggestions() {
       return this.productQuery && !this.selectedProduct
     },
@@ -516,6 +533,17 @@ export default {
     // Determina si el campo abono inicial debe estar deshabilitado
     abonoInicialDeshabilitado() {
       return this.estadoVenta !== 'PENDIENTE'
+    },
+    // Calcula el total de las ventas filtradas
+    totalVentasFiltradas() {
+      if (this.ventas.length === 0) return 0
+      
+      let total = 0
+      this.ventas.forEach(venta => {
+        total += Number(venta.total || 0)
+      })
+      
+      return Number(total.toFixed(2))
     }
   },
   mounted() {
