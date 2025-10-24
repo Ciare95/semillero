@@ -785,7 +785,7 @@ export default {
         this.metodoPago = 'EFECTIVO'
         this.observaciones = ''
         this.productosVenta = []
-        this.activeTab = 'ventas'
+        // Se mantiene en la pestaña de Crear Venta
         await this.listarVentas()
       } catch (error) {
         console.error('Error creando venta:', error)
