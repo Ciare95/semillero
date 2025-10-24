@@ -333,12 +333,10 @@
                 v-model="estadoVenta"
                 class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-colors"
               >
+                <option value="PENDIENTE">Pendiente</option>
                 <option value="COMPLETADA">Completada</option>
                 <option value="ANULADA">Anulada</option>
               </select>
-              <p class="text-xs text-slate-500 mt-1">
-                Nota: el backend crea la venta como COMPLETADA por defecto.
-              </p>
             </div>
 
             <!-- Fila 3: Abono Inicial | (Método de Pago para compatibilidad backend) -->
@@ -349,8 +347,17 @@
                 min="0"
                 step="0.01"
                 v-model.number="abonoInicial"
-                class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-colors"
+                :disabled="abonoInicialDeshabilitado"
+                :class="[
+                  'w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 transition-colors',
+                  abonoInicialDeshabilitado
+                    ? 'border-slate-200 bg-slate-100 text-slate-500 cursor-not-allowed'
+                    : 'border-slate-300 bg-white focus:ring-sky-500 focus:border-sky-500'
+                ]"
               />
+              <p v-if="abonoInicialDeshabilitado" class="text-xs text-slate-500 mt-1">
+                Solo disponible para ventas pendientes
+              </p>
             </div>
             <div>
               <label class="block text-sm font-medium text-slate-700 mb-1">Método de Pago</label>
@@ -433,7 +440,7 @@ export default {
       selectedProduct: null,
       cantidad: 1,
       clienteId: '',
-      estadoVenta: 'COMPLETADA',
+      estadoVenta: 'PENDIENTE',
       abonoInicial: 0,
       metodoPago: 'EFECTIVO',
       observaciones: '',
@@ -505,6 +512,10 @@ export default {
         años.push(i)
       }
       return años
+    },
+    // Determina si el campo abono inicial debe estar deshabilitado
+    abonoInicialDeshabilitado() {
+      return this.estadoVenta !== 'PENDIENTE'
     }
   },
   mounted() {
@@ -512,6 +523,15 @@ export default {
     this.filtrarHoy()
     this.cargarProductos()
     this.cargarClientes()
+  },
+  watch: {
+    // Watcher para el estado de venta
+    estadoVenta(newEstado) {
+      if (newEstado === 'COMPLETADA') {
+        // Si la venta está completada, resetear el abono inicial a 0
+        this.abonoInicial = 0
+      }
+    }
   },
   methods: {
     // Utilidades
