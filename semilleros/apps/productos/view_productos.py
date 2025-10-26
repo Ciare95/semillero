@@ -45,8 +45,42 @@ def obtenerCategorias(request):
 def crearProducto(request):    
     serializer = ProductoSerializer(data=request.data)    
     if serializer.is_valid():
-        serializer.save()
-        return Response(serializer.data, status=201)
+        producto = serializer.save()
+        
+        # Procesar stock inicial si se proporciona
+        stock_inicial = request.data.get('stock_inicial')
+        if stock_inicial and int(stock_inicial) > 0:
+            try:
+                # Verificar y crear ubicación y subcategoría por defecto si no existen
+                from apps.inventario.models import Ubicacion, SubcategoriaInventario, CategoriaInventario, Seccion
+                
+                # Crear sección por defecto si no existe
+                seccion, _ = Seccion.objects.get_or_create(nombre='A')
+                
+                # Crear ubicación por defecto si no existe
+                ubicacion, _ = Ubicacion.objects.get_or_create(
+                    seccion=seccion,
+                    numero=1,
+                    defaults={'seccion': seccion, 'numero': 1}
+                )
+                
+                # Crear categoría de inventario por defecto si no existe
+                categoria_inv, _ = CategoriaInventario.objects.get_or_create(nombre='General')
+                
+                # Crear subcategoría por defecto si no existe
+                subcategoria, _ = SubcategoriaInventario.objects.get_or_create(
+                    categoria=categoria_inv,
+                    nombre='General',
+                    defaults={'categoria': categoria_inv, 'nombre': 'General'}
+                )
+                
+                # Ahora usar el método add_stock del producto
+                producto.add_stock(int(stock_inicial))
+                
+            except Exception as e:
+                return Response({'Error': f'Error al agregar stock inicial: {str(e)}'}, status=400)
+        
+        return Response(ProductoSerializer(producto).data, status=201)
     else:
         return Response(serializer.errors, status=400)
     

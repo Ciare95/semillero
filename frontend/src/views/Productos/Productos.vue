@@ -99,6 +99,7 @@
                 <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Nombre</th>
                 <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Precio</th>
                 <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">IVA</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Stock</th>
                 <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Categoría</th>
                 <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Marca</th>
                 <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Acciones</th>
@@ -110,6 +111,7 @@
                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-slate-900">{{ producto.nombre }}</td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-900">{{ formatMoney(producto.precio_venta) }}</td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-900">{{ producto.iva }}%</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-900">{{ producto.stock }}</td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-900">{{ producto.categoria_detalle?.nombre || producto.categoria }}</td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-900">{{ producto.marca_detalle?.nombre || producto.marca }}</td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
@@ -376,7 +378,20 @@
             <label class="block text-sm font-medium text-slate-700 mb-1">Nombre</label>
             <input 
               v-model="formData.nombre" 
+              @input="formData.nombre = formData.nombre.toUpperCase()"
               placeholder="Ingresa el nombre" 
+              required
+              class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-colors"
+            >
+          </div>
+          
+          <div v-if="showForm === 'productos'">
+            <label class="block text-sm font-medium text-slate-700 mb-1">Precio Compra</label>
+            <input 
+              v-model="formData.precio_compra" 
+              placeholder="0.00" 
+              type="number" 
+              step="0.01" 
               required
               class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-colors"
             >
@@ -428,6 +443,17 @@
             </select>
           </div>
           
+          <div v-if="showForm === 'productos' && !editing">
+            <label class="block text-sm font-medium text-slate-700 mb-1">Stock Inicial</label>
+            <input 
+              v-model="formData.stock_inicial" 
+              placeholder="0" 
+              type="number" 
+              min="0"
+              class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-colors"
+            >
+          </div>
+          
           <div v-if="showForm === 'especiales'">
             <label class="block text-sm font-medium text-slate-700 mb-1">Precio Total</label>
             <input 
@@ -477,11 +503,13 @@ export default {
       showForm: null,
       formData: {
         nombre: '',
+        precio_compra: '',
         precio_venta: '',
         precio_total: '',
         iva: '',
         categoria: '',
-        marca: ''
+        marca: '',
+        stock_inicial: ''
       },
       editing: null
     }
@@ -592,7 +620,7 @@ export default {
           }
         }
         this.showForm = null
-        this.formData = { nombre: '', precio_venta: '', precio_total: '', iva: '', categoria: '', marca: '' }
+        this.formData = { nombre: '', precio_compra: '', precio_venta: '', precio_total: '', iva: '', categoria: '', marca: '', stock_inicial: '' }
         this.editing = null
         this.loadData()
       } catch (error) {
