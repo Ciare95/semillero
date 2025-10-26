@@ -438,6 +438,76 @@
         </form>
       </div>
     </div>
+
+    <!-- Modal de Transacción -->
+    <div v-if="showModalTransaccion" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div class="bg-white rounded-lg shadow-xl w-full max-w-md mx-4">
+        <!-- Header -->
+        <div class="px-6 py-4 border-b border-slate-200">
+          <h3 class="text-lg font-semibold text-slate-900">Transacción</h3>
+        </div>
+        
+        <!-- Content -->
+        <div class="px-6 py-4 space-y-4">
+          <!-- Total a Pagar -->
+          <div>
+            <label class="block text-sm font-medium text-slate-700 mb-1">Total a pagar</label>
+            <div class="px-3 py-2 border-2 border-green-500 rounded-lg bg-slate-50 text-lg font-semibold text-center">
+              {{ formatMoney(totalCalculado) }}
+            </div>
+          </div>
+          
+          <!-- Importe Recibido -->
+          <div>
+            <label class="block text-sm font-medium text-slate-700 mb-1">Importe recibido</label>
+            <input
+              type="number"
+              min="0"
+              step="0.01"
+              v-model.number="importeRecibido"
+              @input="calcularCambio"
+              placeholder="0.00"
+              class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition-colors text-lg font-semibold text-center"
+            />
+          </div>
+          
+          <!-- Cambio a Entregar -->
+          <div>
+            <label class="block text-sm font-medium text-slate-700 mb-1">Cambio a entregar</label>
+            <div 
+              :class="[
+                'px-3 py-2 border-2 rounded-lg text-lg font-semibold text-center transition-colors',
+                cambioCalculado >= 0 
+                  ? 'border-green-500 bg-green-50 text-green-700' 
+                  : 'border-red-500 bg-red-50 text-red-700'
+              ]"
+            >
+              {{ formatMoney(cambioCalculado) }}
+            </div>
+            <p v-if="cambioCalculado < 0" class="text-xs text-red-600 mt-1">
+              El importe recibido es insuficiente
+            </p>
+          </div>
+        </div>
+        
+        <!-- Footer -->
+        <div class="px-6 py-4 border-t border-slate-200 flex justify-end gap-3">
+          <button
+            @click="cerrarModalTransaccion"
+            class="btn btn-ghost"
+          >
+            Cancelar
+          </button>
+          <button
+            @click="confirmarTransaccion"
+            class="btn btn-primary"
+            :disabled="cambioCalculado < 0"
+          >
+            Confirmar
+          </button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -493,6 +563,10 @@ export default {
 
       // UI
       loadingCreate: false,
+
+      // Modal de Transacción
+      showModalTransaccion: false,
+      importeRecibido: 0,
     }
   },
     computed: {
@@ -548,6 +622,12 @@ export default {
       })
       
       return Number(total.toFixed(2))
+    },
+    // Calcula el cambio a entregar
+    cambioCalculado() {
+      const total = this.totalCalculado
+      const recibido = Number(this.importeRecibido || 0)
+      return Number((recibido - total).toFixed(2))
     }
   },
   mounted() {
@@ -795,9 +875,52 @@ export default {
       }
     },
 
-    // Placeholder transacción
+    // Métodos de transacción
     onTransaccion() {
-      alert('Funcionalidad de Transacción pendiente de definición.')
+      if (this.productosVenta.length === 0) {
+        alert('Debe agregar al menos un producto a la venta para calcular la transacción')
+        return
+      }
+      this.showModalTransaccion = true
+      this.importeRecibido = 0
+      // Enfocar automáticamente el campo de importe recibido
+      this.$nextTick(() => {
+        const modal = this.$el.querySelector('.fixed.inset-0')
+        if (modal) {
+          const input = modal.querySelector('input[type="number"]')
+          if (input) {
+            input.focus()
+            input.select()
+          }
+        }
+      })
+    },
+
+    calcularCambio() {
+      // El cálculo se realiza automáticamente en la computed property cambioCalculado
+      // Este método se mantiene para el @input en el template
+    },
+
+    cerrarModalTransaccion() {
+      this.showModalTransaccion = false
+      this.importeRecibido = 0
+    },
+
+    async confirmarTransaccion() {
+      if (this.cambioCalculado < 0) {
+        alert('El importe recibido es insuficiente para cubrir el total de la venta')
+        return
+      }
+
+      // Cerrar modal y proceder con la venta
+      this.cerrarModalTransaccion()
+      
+      // Configurar la venta como completada con pago en efectivo
+      this.estadoVenta = 'COMPLETADA'
+      this.metodoPago = 'EFECTIVO'
+      
+      // Guardar la venta automáticamente
+      await this.crearVenta()
     },
 
     // Métodos de filtros de fecha independientes
