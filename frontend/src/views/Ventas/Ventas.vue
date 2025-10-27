@@ -222,7 +222,7 @@
                 <tr>
                   <th class="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Producto</th>
                   <th class="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Cantidad</th>
-                  <th class="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Precio</th>
+                  <th class="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Precio por Unidad</th>
                   <th class="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Total</th>
                   <th class="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Acciones</th>
                 </tr>
@@ -591,11 +591,8 @@ export default {
       let totalGeneral = 0
       this.productosVenta.forEach(item => {
         const precio = Number(item.producto.precio_venta || 0)
-        const ivaPercent = Number(item.producto.iva || 0)
         const subtotal = precio * item.cantidad
-        const ivaValor = subtotal * (ivaPercent / 100)
-        const total = subtotal + ivaValor
-        totalGeneral += total
+        totalGeneral += subtotal
       })
       
       return Number(totalGeneral.toFixed(2))
@@ -795,15 +792,12 @@ export default {
       } else {
         // Si no existe, agregar nuevo producto
         const precio = Number(this.selectedProduct.precio_venta || 0)
-        const ivaPercent = Number(this.selectedProduct.iva || 0)
         const subtotal = precio * this.cantidad
-        const ivaValor = subtotal * (ivaPercent / 100)
-        const total = subtotal + ivaValor
 
         this.productosVenta.push({
           producto: { ...this.selectedProduct },
           cantidad: this.cantidad,
-          total: Number(total.toFixed(2))
+          total: Number(subtotal.toFixed(2))
         })
       }
 
@@ -817,11 +811,8 @@ export default {
       const item = this.productosVenta[index]
       if (item && item.cantidad > 0) {
         const precio = Number(item.producto.precio_venta || 0)
-        const ivaPercent = Number(item.producto.iva || 0)
         const subtotal = precio * item.cantidad
-        const ivaValor = subtotal * (ivaPercent / 100)
-        const total = subtotal + ivaValor
-        item.total = Number(total.toFixed(2))
+        item.total = Number(subtotal.toFixed(2))
       }
     },
 
